@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>360° 互動教材創作與設定工具｜教師專用工作台</title>
+  
+  <!-- Google Fonts: Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- 本地 Pannellum 樣式 -->
+  <link rel="stylesheet" href="css/pannellum.css">
+
+  <style>
+    :root {
+      --color-primary: #bf360c;
+      --color-primary-hover: #d84315;
+      --color-secondary: #2e7d32;
+      --color-bg: #f5f2eb;
+      --color-card-bg: #ffffff;
+      --color-dark: #271a15;
+      --color-border: #d7ccc8;
+      --color-accent: #ff9800;
+      --color-sidebar: #faf8f5;
+      --font-main: "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--color-bg);
+      color: var(--color-dark);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ================= 頂部全域導覽列 ================= */
+    .editor-header {
+      background: #ffffff;
+      border-bottom: 2px solid var(--color-border);
+      padding: 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      font-size: 26px;
+    }
+
+    .brand-title {
+      font-size: 19px;
+      font-weight: 900;
+      color: var(--color-primary);
+      letter-spacing: 0.5px;
+    }
+
+    .brand-badge {
+      background: #efebe9;
+      color: #5d4037;
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-weight: 700;
+    }
+
+    /* 頂部視圖切換標籤 (Views Tabs) */
+    .view-nav-tabs {
+      display: flex;
+      gap: 6px;
+      background: #ede7e1;
+      padding: 4px;
+      border-radius: 24px;
+    }
+
+    .view-tab-btn {
+      background: transparent;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #5d4037;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .view-tab-btn:hover {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .view-tab-btn.active {
+      background: #ffffff;
+      color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    /* 頂部動作按鈕 */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(46, 125, 50, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 14px rgba(46, 125, 50, 0.45);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #5d4037;
+      border: 1.5px solid var(--color-border);
+    }
+
+    .btn-secondary:hover {
+      background: #efebe9;
+      border-color: #bcaaa4;
+    }
+
+    .btn-export {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1.5px solid #90caf9;
+    }
+
+    .btn-export:hover {
+      background: #bbdefb;
+    }
+
+    /* ================= 視圖容器 ================= */
+    .views-wrapper {
+      flex: 1;
+      height: calc(100vh - 60px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .view-panel {
+      position: absolute;
+      inset: 0;
+      display: none;
+      background: var(--color-bg);
+      overflow: hidden;
+    }
+
+    .view-panel.active {
+      display: flex;
+    }
+
+    /* ================= 視圖 1：360 場景與線索 (Main Workspace) ================= */
+    .scene-view-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 場景切換橫列 (Scene Tabs Bar) */
+    .scene-tabs-bar {
+      background: #faf8f5;
+      border-bottom: 2px solid var(--color-border);
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .scene-tab {
+      background: #ffffff;
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .scene-tab:hover {
+      border-color: #ffb74d;
+      background: #fffbf7;
+    }
+
+    .scene-tab.active {
+      border-color: var(--color-primary);
+      background: #fff3e0;
+      box-shadow: 0 3px 10px rgba(191, 54, 12, 0.18);
+    }
+
+    .scene-tab-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--color-dark);
+    }
+
+    .scene-tab.active .scene-tab-name {
+      color: var(--color-primary);
+    }
+
+    .scene-tab-action {
+      background: transparent;
+      border: none;
+      color: #8d6e63;
+      padding: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .scene-tab-action:hover {
+      background: #efebe9;
+      color: #bf360c;
+    }
+
+    .add-scene-btn {
+      background: #fff8e1;
+      border: 2px dashed #ffb74d;
+      color: #e65100;
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .add-scene-btn:hover {
+      background: #ffe0b2;
+      border-color: #f57c00;
+      transform: translateY(-1px);
+    }
+
+    /* 左右雙欄：360 全景 ＋ 側邊線索列表 */
+    .scene-editor-body {
+      display: flex;
+      flex: 1;
+      height: calc(100% - 54px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .viewer-pane {
+      flex: 1;
+      position: relative;
+      background: #1e262c;
+      overflow: hidden;
+    }
+
+    #panorama-editor {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 中心十字準心 */
+    .crosshair-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .crosshair {
+      width: 36px;
+      height: 36px;
+      position: relative;
+    }
+
+    .crosshair::before, .crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 235, 59, 0.95);
+      box-shadow: 0 0 6px rgba(0,0,0,0.8);
+    }
+
+    .crosshair::before {
+      top: 17px;
+      left: 0;
+      width: 36px;
+      height: 2px;
+    }
+
+    .crosshair::after {
+      top: 0;
+      left: 17px;
+      width: 2px;
+      height: 36px;
+    }
+
+    .crosshair-center-dot {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ff1744;
+      box-shadow: 0 0 5px #fff;
+    }
+
+    /* 全景畫面浮動工具列 */
+    .viewer-overlay-toolbar {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+      pointer-events: none;
+      gap: 12px;
+    }
+
+    .coord-badge {
+      pointer-events: auto;
+      background: rgba(20, 24, 32, 0.9);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .coord-badge strong {
+      color: #ffe082;
+    }
+
+    .overlay-actions-right {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .aim-btn {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 4px 14px rgba(245, 124, 0, 0.45);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .aim-btn:hover {
+      transform: scale(1.03);
+      background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+    }
+
+    .add-hotspot-quick-btn {
+      background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1.5px solid #a5d6a7;
+      box-shadow: 0 4px 14px rgba(46, 125, 50, 0.45);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .add-hotspot-quick-btn:hover {
+      transform: scale(1.03);
+      background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+    }
+
+    .change-pano-btn {
+      background: rgba(33, 150, 243, 0.9);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 4px 14px rgba(25, 118, 210, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .change-pano-btn:hover {
+      background: #1976d2;
+      transform: scale(1.03);
+    }
+
+    /* 右側線索列表控制面板 */
+    .sidebar-pane {
+      width: 440px;
+      background: var(--color-sidebar);
+      border-left: 2px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 10;
+      box-shadow: -4px 0 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar-header {
+      padding: 14px 18px;
+      border-bottom: 2px solid var(--color-border);
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-header h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+
+    .clue-list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 線索卡片項目 */
+    .clue-edit-card {
+      background: #ffffff;
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      padding: 14px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .clue-edit-card:hover {
+      border-color: #ffb74d;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .clue-edit-card.selected {
+      border-color: var(--color-primary);
+      background: #fffbf9;
+      box-shadow: 0 4px 14px rgba(191, 54, 12, 0.15);
+    }
+
+    .clue-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .clue-title-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .icon-input {
+      width: 38px;
+      height: 34px;
+      text-align: center;
+      font-size: 20px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 8px;
+      background: #faf8f5;
+    }
+
+    .title-input {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--color-dark);
+      border: 1.5px solid var(--color-border);
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    .title-input:focus, .icon-input:focus, .desc-textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      background: #fff;
+    }
+
+    .desc-textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 8px 10px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #424242;
+      resize: vertical;
+      font-family: inherit;
+      margin-bottom: 8px;
+    }
+
+    .clue-options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #616161;
+      margin-bottom: 8px;
+    }
+
+    .egg-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #e65100;
+    }
+
+    /* 座標輸入控制區 */
+    .coord-inputs-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .input-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .input-field label {
+      font-size: 11px;
+      font-weight: bold;
+      color: #6d4c41;
+    }
+
+    .input-field input {
+      padding: 5px 8px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--color-primary);
+      font-family: inherit;
+    }
+
+    .clue-card-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .card-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--color-border);
+      background: #ffffff;
+      color: #5d4037;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .card-btn:hover {
+      background: #efebe9;
+    }
+
+    .card-btn.primary-action {
+      background: #fff3e0;
+      color: #e65100;
+      border-color: #ffb74d;
+    }
+
+    .card-btn.primary-action:hover {
+      background: #ffe0b2;
+    }
+
+    .card-btn.delete-action {
+      flex: 0 0 32px;
+      color: #c62828;
+      border-color: #ef9a9a;
+    }
+
+    .card-btn.delete-action:hover {
+      background: #ffebee;
+    }
+
+    .editor-footer {
+      padding: 10px 16px;
+      border-top: 2px solid var(--color-border);
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-text {
+      font-size: 12px;
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    /* ================= 視圖 2：關卡問答題庫 (Quiz View) ================= */
+    .scrollable-view-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 24px 32px;
+    }
+
+    .section-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .section-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-header-row h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+
+    .quiz-card {
+      background: #ffffff;
+      border: 2px solid var(--color-border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: relative;
+    }
+
+    .quiz-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .quiz-card-num {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--color-primary);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #5d4037;
+      margin-bottom: 5px;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--color-dark);
+      background: #fff;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(191, 54, 12, 0.12);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #faf8f5;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1.5px solid var(--color-border);
+    }
+
+    .option-row.correct {
+      border-color: #4caf50;
+      background: #e8f5e9;
+    }
+
+    .option-radio {
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+
+    .option-text-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-dark);
+      outline: none;
+    }
+
+    /* ================= 視圖 3：生活比較總表 & Markdown 編輯器 ================= */
+    .markdown-editor-box {
+      background: #faf8f5;
+      border: 2px solid var(--color-border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-top: 12px;
+      margin-bottom: 24px;
+    }
+
+    .md-editor-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #efebe9;
+      padding: 10px 16px;
+      border-bottom: 2px solid var(--color-border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .md-toolbar-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #4e342e;
+    }
+
+    .md-toolbar-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .md-tool-btn {
+      background: #fff;
+      border: 1.5px solid #d7ccc8;
+      color: #5d4037;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .md-tool-btn:hover {
+      background: #fff3e0;
+      border-color: #ffb74d;
+      color: #e65100;
+    }
+
+    .md-editor-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 400px;
+    }
+
+    @media (max-width: 960px) {
+      .md-editor-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .md-editor-col {
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+    }
+
+    .md-editor-col:first-child {
+      border-right: 2px solid var(--color-border);
+      background: #ffffff;
+    }
+
+    .md-col-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #6d4c41;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .md-raw-textarea {
+      flex: 1;
+      width: 100%;
+      min-height: 340px;
+      font-family: Consolas, Monaco, 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1.5px solid #d7ccc8;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fffdfa;
+      resize: vertical;
+    }
+
+    .md-raw-textarea:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(191, 54, 12, 0.1);
+    }
+
+    .md-preview-pane {
+      flex: 1;
+      padding: 16px;
+      background: #fff;
+      border: 1.5px solid #e0d8d3;
+      border-radius: 8px;
+      overflow-y: auto;
+      max-height: 500px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    /* AI Prompt Box & Modal Extra */
+    .modal-card-lg {
+      max-width: 920px !important;
+    }
+
+    .ai-prompt-box {
+      background: #212121;
+      color: #eceff1;
+      border-radius: 10px;
+      padding: 14px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      max-height: 240px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1.5px solid #424242;
+    }
+
+    .prompt-card {
+      background: #fff8e1;
+      border: 1.5px solid #ffe082;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .copy-prompt-btn {
+      background: #ff9800;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .copy-prompt-btn:hover {
+      background: #f57c00;
+      transform: translateY(-1px);
+    }
+
+    /* ================= 視圖 4：教材全域設定 ================= */
+    .settings-card {
+      background: #ffffff;
+      border: 2px solid var(--color-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    .settings-card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--color-primary);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid #efebe9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ================= 彈窗 (Modals) ================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 20, 30, 0.7);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 18px;
+      border: 2px solid var(--color-border);
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+      position: relative;
+      animation: modalSlide 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    @keyframes modalSlide {
+      0% { transform: translateY(15px) scale(0.96); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f0eae1;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+
+    .modal-close-btn {
+      background: #efebe9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5d4037;
+    }
+
+    .modal-close-btn:hover {
+      background: #e0d8d3;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1.5px solid #f0eae1;
+    }
+
+    /* 上傳區域 (Dropzone) */
+    .dropzone-box {
+      border: 2.5px dashed #ffb74d;
+      border-radius: 14px;
+      background: #fffbf5;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .dropzone-box:hover {
+      background: #fff3e0;
+      border-color: var(--color-primary);
+    }
+
+    .dropzone-icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+
+    .dropzone-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: #5d4037;
+    }
+
+    .dropzone-hint {
+      font-size: 12px;
+      color: #8d6e63;
+      margin-top: 4px;
+    }
+
+    /* Pannellum 標記圖釘 */
+    .clue-hotspot {
+      cursor: pointer !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    .editor-hotspot-pin {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      transform: translate(-50%, -50%);
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 4px !important;
+      cursor: pointer !important;
+      z-index: 30 !important;
+    }
+
+    .editor-pin-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff9c4 0%, #ffb300 45%, #ff6f00 100%);
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 16px rgba(255, 111, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      transition: all 0.2s ease;
+    }
+
+    .editor-hotspot-pin.active .editor-pin-circle {
+      transform: scale(1.25);
+      border-color: #ff1744;
+      box-shadow: 0 0 24px #ff1744;
+    }
+
+    .editor-pin-label {
+      background: rgba(30, 20, 15, 0.92);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+      border: 1.5px solid #ffcc80;
+    }
+
+    /* 訊息 Toast */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(20, 24, 32, 0.95);
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: 800;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1.5px solid #ffb74d;
+      z-index: 3000;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= 頂部全域導覽列 ================= -->
+  <header class="editor-header">
+    <div class="brand-group">
+      <span class="brand-icon">🏺</span>
+      <div>
+        <h1 class="brand-title" id="app-title-display">360° 互動教材創作台</h1>
+      </div>
+      <span class="brand-badge">教師專用全功能版</span>
+    </div>
+
+    <!-- 頂部視圖切換標籤 -->
+    <div class="view-nav-tabs">
+      <button type="button" class="view-tab-btn active" data-view="scene">
+        🧭 360 場景與線索
+      </button>
+      <button type="button" class="view-tab-btn" data-view="quiz">
+        📝 關卡題庫挑戰
+      </button>
+      <button type="button" class="view-tab-btn" data-view="comparison">
+        📊 比較總表與大魔王
+      </button>
+      <button type="button" class="view-tab-btn" data-view="settings">
+        ⚙️ 教材整體文案與外觀
+      </button>
+    </div>
+
+    <!-- 功能動作按鈕 -->
+    <div class="header-actions">
+      <button type="button" id="btn-master-ai-prompt" class="btn" style="background: linear-gradient(135deg, #6a1b9a, #8e24aa); color: #fff; border: none; font-weight: 800; box-shadow: 0 2px 8px rgba(106, 27, 154, 0.3);" title="一鍵複製全站 AI 生成 Prompt，或貼上 AI 生成的 JSON 套用全站內容">
+        🤖 全站 AI 教材生成
+      </button>
+      <button type="button" id="new-theme-btn" class="btn btn-secondary" title="建立全新主題的教材專案">
+        ✨ 開新主題
+      </button>
+      <button type="button" id="import-json-btn" class="btn btn-secondary" title="匯入已備份的 JSON 設定檔">
+        📂 匯入
+      </button>
+      <button type="button" id="export-json-btn" class="btn btn-secondary" title="匯出完整設定 JSON">
+        📥 匯出
+      </button>
+      <button type="button" id="export-standalone-btn" class="btn btn-export" title="產生學生專用、免安裝伺服器的單檔離線版 HTML">
+        📦 匯出學生獨立版
+      </button>
+      <button type="button" id="preview-student-btn" class="btn btn-secondary" title="開新分頁預覽學生端效果">
+        👀 學生端預覽
+      </button>
+      <button type="button" id="save-settings-btn" class="btn btn-primary" title="直接儲存回存至 data/eras.json 與 data/eras.js">
+        💾 儲存並回存專案
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= 視圖容器 ================= -->
+  <main class="views-wrapper">
+
+    <!-- 視圖 1：360 場景與線索定位 (主要畫面) -->
+    <section id="view-scene" class="view-panel active">
+      <div class="scene-view-container">
+        <!-- 場景標籤橫列 -->
+        <div class="scene-tabs-bar">
+          <div id="scene-tabs-list" style="display: flex; gap: 8px; align-items: center;">
+            <!-- 動態渲染場景 Tab -->
+          </div>
+          <button type="button" id="add-scene-btn" class="add-scene-btn">
+            ➕ 新增 360 場景
+          </button>
+        </div>
+
+        <!-- 360 視圖 ＋ 右側線索側邊欄 -->
+        <div class="scene-editor-body">
+          <div class="viewer-pane">
+            <div id="panorama-editor"></div>
+
+            <!-- 十字準心 -->
+            <div class="crosshair-container">
+              <div class="crosshair">
+                <div class="crosshair-center-dot"></div>
+              </div>
+            </div>
+
+            <!-- 視角座標與快捷動作工具列 -->
+            <div class="viewer-overlay-toolbar">
+              <div class="coord-badge">
+                <span>視角中心：Yaw: <strong id="current-yaw">0.0°</strong> ｜ Pitch: <strong id="current-pitch">0.0°</strong></span>
+              </div>
+
+              <div class="overlay-actions-right">
+                <button type="button" id="apply-crosshair-btn" class="aim-btn" title="將選中的線索座標設定為當前視角十字準心處">
+                  📍 將選取線索移至準心
+                </button>
+                <button type="button" id="add-hotspot-at-center-btn" class="add-hotspot-quick-btn" title="直接在中心準心處新增一個線索">
+                  ➕ 在此準心新增線索
+                </button>
+                <button type="button" id="change-pano-trigger-btn" class="change-pano-btn" title="上傳新的 360° 全景圖取代原有圖片">
+                  🖼️ 更換本場景全景圖
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右側線索列表面板 -->
+          <aside class="sidebar-pane">
+            <div class="sidebar-header">
+              <h3 id="sidebar-scene-title">生活線索設定</h3>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" id="batch-clue-btn" class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px; background: #fff3e0; color: #e65100; border-color: #ffb74d;" title="批次匯入線索文字與說明（自動分配隨機座標）">
+                  📋 批次匯入
+                </button>
+                <button type="button" id="add-clue-btn" class="btn btn-secondary" style="padding: 5px 12px; font-size: 13px;">
+                  ➕ 新增線索
+                </button>
+              </div>
+            </div>
+
+            <div id="clue-list" class="clue-list-container">
+              <!-- 動態渲染線索卡片 -->
+            </div>
+
+            <div class="editor-footer">
+              <span class="status-text" id="server-status">
+                🟢 本地 Python 伺服器連線正常（支援一鍵回存）
+              </span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- 視圖 2：關卡問答題庫 (Quiz View) -->
+    <section id="view-quiz" class="view-panel">
+      <div class="scrollable-view-content">
+        <div class="section-container">
+          <div class="section-header-row">
+            <div>
+              <h2 id="quiz-scene-title">關卡生存問答挑戰題庫</h2>
+              <p style="font-size: 14px; color: #666; margin-top: 4px;">找齊線索後開啟的測驗題目，答對可累積星星並榮獲關卡徽章。</p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" id="batch-quiz-btn" class="btn btn-secondary" style="background: #e8f5e9; color: #2e7d32; border-color: #81c784;" title="貼上多題文字或 JSON 批次匯入">
+                📋 批次匯入題庫
+              </button>
+              <button type="button" id="copy-quiz-prompt-btn" class="btn btn-secondary" style="font-size: 13px;" title="複製專用 AI 出題 Prompt">
+                💡 複製出題 Prompt
+              </button>
+              <button type="button" id="add-quiz-btn" class="btn btn-primary">
+                ➕ 新增問答題目
+              </button>
+            </div>
+          </div>
+
+          <!-- 題庫清單容器 -->
+          <div id="quiz-list-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 視圖 3：比較總表與大魔王 (Comparison & Final Boss) -->
+    <section id="view-comparison" class="view-panel">
+      <div class="scrollable-view-content">
+        <div class="section-container">
+          <!-- 終極大魔王挑戰 -->
+          <div class="settings-card">
+            <h3>👹 終極試煉大魔王題目（全通關後解鎖）</h3>
+            <div class="form-group">
+              <label class="form-label">大魔王題目：</label>
+              <textarea id="final-boss-q" class="form-textarea" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">選項（點選圓鈕指定正確解答）：</label>
+              <div id="final-boss-options" class="options-grid"></div>
+            </div>
+            <div class="grid-2col">
+              <div class="form-group">
+                <label class="form-label">答題提示 Hint：</label>
+                <input type="text" id="final-boss-hint" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">解析說明 Explain：</label>
+                <input type="text" id="final-boss-explain" class="form-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- 時代生活比較總表 -->
+          <div class="settings-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+              <h3 style="margin: 0; border: none;">📊 各場景生活比較總表（學生端彈窗）</h3>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" id="copy-compare-prompt-btn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" title="複製專用 AI 比較表 Prompt">
+                  📋 複製 AI 比較表 Prompt
+                </button>
+                <button type="button" id="load-template-table-btn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" title="將目前所有場景名稱轉為 Markdown 表格範本">
+                  🔄 從現有場景載入表格
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">比較表大標題：</label>
+              <input type="text" id="comparison-table-title" class="form-input" placeholder="例如：📊 臺灣三大史前時代生活比較總表">
+            </div>
+
+            <!-- Markdown 編輯器與即時預覽雙欄 -->
+            <div class="markdown-editor-box">
+              <div class="md-editor-toolbar">
+                <span class="md-toolbar-title">✍️ 完整 Markdown 輸入框（貼入含語法文字即可直接預覽）：</span>
+                <div class="md-toolbar-btns">
+                  <button type="button" class="md-tool-btn" data-insert-md="table" title="插入標準 Markdown 表格">📊 插入表格</button>
+                  <button type="button" class="md-tool-btn" data-insert-md="bold" title="粗體 **文字**">𝗕 粗體</button>
+                  <button type="button" class="md-tool-btn" data-insert-md="note" title="插入醒目重點框">💡 醒目重點</button>
+                  <button type="button" class="md-tool-btn" data-insert-md="list" title="插入項目清單">• 清單</button>
+                </div>
+              </div>
+
+              <div class="md-editor-split">
+                <!-- 左側：原始碼輸入框 -->
+                <div class="md-editor-col">
+                  <div class="md-col-label">📝 Markdown 原始輸入框（支援表格、粗體、清單、引言）：</div>
+                  <textarea id="comparison-markdown-input" class="form-textarea md-raw-textarea" rows="14" placeholder="| 比較項目 | 場景1 | 場景2 |&#10;| :--- | :--- | :--- |&#10;| 項目描述 | 內容A | 內容B |&#10;&#10;> 💡 核心重點：貼入含語法文字即可直接預覽！"></textarea>
+                </div>
+
+                <!-- 右側：即時預覽區 -->
+                <div class="md-editor-col">
+                  <div class="md-col-label">👁️ 即時格式化預覽（學生端彈窗呈現效果）：</div>
+                  <div id="comparison-markdown-preview" class="md-preview-pane"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 視圖 4：教材整體文案與外觀 (Theme & Texts) -->
+    <section id="view-settings" class="view-panel">
+      <div class="scrollable-view-content">
+        <div class="section-container">
+          <!-- 教材主題基本資訊 -->
+          <div class="settings-card">
+            <h3>🏷️ 教材主題與主標題設定</h3>
+            <div class="grid-2col">
+              <div class="form-group">
+                <label class="form-label">教材大標題（App Title）：</label>
+                <input type="text" id="cfg-app-title" class="form-input" placeholder="例如：史前臺灣時光機">
+              </div>
+              <div class="form-group">
+                <label class="form-label">副標題（App Subtitle）：</label>
+                <input type="text" id="cfg-app-subtitle" class="form-input" placeholder="例如：360° 生存大挑戰">
+              </div>
+            </div>
+            <div class="grid-2col">
+              <div class="form-group">
+                <label class="form-label">領域 / 單元 / 課本冊別頁碼標籤：</label>
+                <input type="text" id="cfg-brand-tag" class="form-input" placeholder="例如：社會五上・第 66～75 頁">
+              </div>
+              <div class="form-group">
+                <label class="form-label">首頁推薦徽章標籤：</label>
+                <input type="text" id="cfg-home-badge" class="form-input" placeholder="例如：🌟 國小社會五上 數位 360° 互動教材">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">首頁導讀說明敘述：</label>
+              <textarea id="cfg-home-desc" class="form-textarea" rows="3" placeholder="例如：搭乘時光機穿越五萬年..."></textarea>
+            </div>
+            <div class="grid-2col">
+              <div class="form-group">
+                <label class="form-label">首頁啟動按鈕文字：</label>
+                <input type="text" id="cfg-start-btn" class="form-input" placeholder="例如：🚀 啟動時光機">
+              </div>
+              <div class="form-group">
+                <label class="form-label">時光機儀表板標題：</label>
+                <input type="text" id="cfg-timeline-title" class="form-input" placeholder="例如：⏱️ 時光機儀表板">
+              </div>
+            </div>
+          </div>
+
+          <!-- 通關與證書設定 -->
+          <div class="settings-card">
+            <h3>🏆 探險家證書與通關表揚設定</h3>
+            <div class="grid-2col">
+              <div class="form-group">
+                <label class="form-label">頒發單位（Issuer）：</label>
+                <input type="text" id="cfg-issuer" class="form-input" placeholder="例如：新北市八里國小 社會教學團隊">
+              </div>
+              <div class="form-group">
+                <label class="form-label">證書主榮譽稱號：</label>
+                <input type="text" id="cfg-cert-title" class="form-input" placeholder="例如：臺灣史前時光探險家">
+              </div>
+            </div>
+            <div class="grid-2col">
+              <div class="form-group">
+                <label class="form-label">全通關彩帶標題：</label>
+                <input type="text" id="cfg-banner-title" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">全通關彩帶內文：</label>
+                <input type="text" id="cfg-banner-desc" class="form-input">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">證書表揚文案（四行詩意讚揚文字）：</label>
+              <input type="text" id="cfg-cert-line-1" class="form-input" style="margin-bottom: 6px;">
+              <input type="text" id="cfg-cert-line-2" class="form-input" style="margin-bottom: 6px;">
+              <input type="text" id="cfg-cert-line-3" class="form-input" style="margin-bottom: 6px;">
+              <input type="text" id="cfg-cert-line-4" class="form-input">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= 彈窗 1：場景設定與編輯 (Scene Modal) ================= -->
+  <div id="scene-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="scene-modal-title">⚙️ 場景資訊設定</h3>
+        <button type="button" class="modal-close-btn" data-close="scene-modal">✕</button>
+      </div>
+
+      <input type="hidden" id="modal-scene-is-new" value="0">
+      
+      <div class="grid-2col">
+        <div class="form-group">
+          <label class="form-label">場景 ID（英數字唯一代碼）：</label>
+          <input type="text" id="modal-scene-id" class="form-input" placeholder="如 paleolithic, ocean">
+        </div>
+        <div class="form-group">
+          <label class="form-label">場景名稱：</label>
+          <input type="text" id="modal-scene-name" class="form-input" placeholder="如 舊石器時代, 火星探索">
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <div class="form-group">
+          <label class="form-label">副標題 / 代表文化：</label>
+          <input type="text" id="modal-scene-subtitle" class="form-input" placeholder="如 長濱文化">
+        </div>
+        <div class="form-group">
+          <label class="form-label">年代 / 時間 / 時期：</label>
+          <input type="text" id="modal-scene-years" class="form-input" placeholder="如 約 50,000 年前">
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <div class="form-group">
+          <label class="form-label">代表遺址 / 地點：</label>
+          <input type="text" id="modal-scene-site" class="form-input" placeholder="如 八仙洞考古遺址">
+        </div>
+        <div class="form-group">
+          <label class="form-label">徽章稱號 / Emoji：</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="modal-scene-badge-emoji" style="width: 45px; text-align: center; font-size: 18px;" class="form-input" value="🏅">
+            <input type="text" id="modal-scene-badge-title" style="flex: 1;" class="form-input" placeholder="如 生火打石小達人">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">小隊長進入語音旁白提示：</label>
+        <textarea id="modal-scene-hint" class="form-textarea" rows="2"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">關卡詳細簡介文案：</label>
+        <textarea id="modal-scene-intro" class="form-textarea" rows="3"></textarea>
+      </div>
+
+      <!-- 全景圖設定與上傳區域 -->
+      <div class="form-group">
+        <label class="form-label">360° 等距長方投影全景圖 (2:1 比例最佳)：</label>
+        <div class="dropzone-box" id="modal-pano-dropzone">
+          <div class="dropzone-icon">🖼️</div>
+          <div class="dropzone-text" id="modal-pano-status">點擊或拖曳 JPG / PNG 全景圖片至此上傳</div>
+          <div class="dropzone-hint">支援 2K / 4K 全景圖，後端將自動同步為免 CORS 離線資源</div>
+          <input type="file" id="modal-pano-file-input" accept="image/jpeg,image/png,image/webp" style="display: none;">
+        </div>
+        <input type="hidden" id="modal-scene-pano-path">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close="scene-modal">取消</button>
+        <button type="button" id="modal-scene-save-btn" class="btn btn-primary">儲存場景設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 彈窗 2：批次匯入關卡題目 (Batch Quiz Modal) ================= -->
+  <div id="modal-batch-quiz" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">📋 批次匯入題目至【<span id="batch-quiz-era-name">目前時代</span>】</h3>
+        <button type="button" class="modal-close-btn" data-close="modal-batch-quiz">✕</button>
+      </div>
+
+      <!-- AI Prompt 提示卡片 -->
+      <div class="prompt-card">
+        <div class="prompt-header">
+          <strong style="color: #b78103; font-size: 14px;">🤖 AI 題庫出題專用 Prompt（可複製貼給 ChatGPT / Claude / Gemini 生成）：</strong>
+          <button type="button" id="copy-quiz-prompt-inside-btn" class="copy-prompt-btn">
+            📋 複製出題 Prompt
+          </button>
+        </div>
+        <div id="ai-quiz-prompt-text" class="ai-prompt-box"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" style="display: flex; justify-content: space-between;">
+          <span>貼上 AI 生成的題目文字或 JSON 陣列：</span>
+          <span id="batch-quiz-parse-count" style="color: #2e7d32; font-weight: 700;">已識別 0 題</span>
+        </label>
+        <textarea id="batch-quiz-raw-input" class="form-textarea md-raw-textarea" rows="8" placeholder="支援純文字格式：&#10;Q1: 舊石器時代人類主要使用什麼工具？&#10;A) 精美玉器&#10;B) 打製石器&#10;C) 鐵製鋤頭&#10;D) 塑膠鏟子&#10;答案: B&#10;提示: 當時還沒有磨製技術喔！&#10;解析: 舊石器時代主要使用敲打石塊製成的打製石器。&#10;&#10;（亦支援標準 JSON 陣列格式：[{&quot;q&quot;:&quot;...&quot;,&quot;options&quot;:[&quot;A&quot;,&quot;B&quot;,&quot;C&quot;,&quot;D&quot;],&quot;answer&quot;:1,&quot;hint&quot;:&quot;...&quot;,&quot;explain&quot;:&quot;...&quot;}]）"></textarea>
+      </div>
+
+      <div class="form-group" style="background: #f5f5f5; padding: 12px 16px; border-radius: 8px;">
+        <label class="form-label" style="margin-bottom: 6px;">匯入模式：</label>
+        <div style="display: flex; gap: 20px;">
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px;">
+            <input type="radio" name="batch-quiz-mode" value="append" checked>
+            <span>➕ 追加至現有題庫後方</span>
+          </label>
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px; color: #c62828;">
+            <input type="radio" name="batch-quiz-mode" value="replace">
+            <span>⚠️ 清空並取代本場景所有舊題目</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close="modal-batch-quiz">取消</button>
+        <button type="button" id="confirm-batch-quiz-btn" class="btn btn-primary" style="background: #2e7d32;">
+          🚀 確認批次匯入
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 彈窗 3：批次匯入生活線索 (Batch Clues Modal) ================= -->
+  <div id="modal-batch-clues" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">📋 批次匯入生活線索至【<span id="batch-clues-era-name">目前時代</span>】</h3>
+        <button type="button" class="modal-close-btn" data-close="modal-batch-clues">✕</button>
+      </div>
+
+      <!-- AI Prompt 提示卡片 -->
+      <div class="prompt-card">
+        <div class="prompt-header">
+          <strong style="color: #b78103; font-size: 14px;">🤖 AI 線索生成專用 Prompt（可複製貼給 ChatGPT / Claude / Gemini 生成）：</strong>
+          <button type="button" id="copy-clues-prompt-inside-btn" class="copy-prompt-btn">
+            📋 複製線索 Prompt
+          </button>
+        </div>
+        <div id="ai-clues-prompt-text" class="ai-prompt-box"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" style="display: flex; justify-content: space-between;">
+          <span>貼上 AI 生成的線索清單或 JSON 陣列：</span>
+          <span id="batch-clues-parse-count" style="color: #e65100; font-weight: 700;">已識別 0 個線索</span>
+        </label>
+        <textarea id="batch-clues-raw-input" class="form-textarea md-raw-textarea" rows="8" placeholder="支援條列格式（圖示+標題+說明）：&#10;1. [🏠] 海邊天然岩洞：這裡的人住在海邊岩洞，可以遮風避雨，取水方便。&#10;2. [🔥] 已知用火：已會用火燒烤食物、夜間照明取暖與驅趕野獸。&#10;3. [🪨] 敲打做石器：使用敲打出來的打製石器作為獵食與切割工具。&#10;4. [🐟] 捕魚維生：拿著木矛在溪流與海濱捕魚採貝。&#10;&#10;（亦支援 JSON 格式：[{&quot;icon&quot;:&quot;🏠&quot;,&quot;title&quot;:&quot;海邊天然岩洞&quot;,&quot;text&quot;:&quot;...&quot;}]）"></textarea>
+      </div>
+
+      <div style="background: #e8f5e9; border: 1.5px solid #a5d6a7; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; color: #1b5e20;">
+        💡 <strong>座標自動分配說明</strong>：匯入後系統會自動在 360° 球體空間內隨機分散配置 Yaw 水平角與 Pitch 俯仰角，保證不重疊。匯入後您只需在全景中點擊該線索旋轉視野，並點擊「📍 將選取線索移至準心」即可精準微調位置！
+      </div>
+
+      <div class="form-group" style="background: #f5f5f5; padding: 12px 16px; border-radius: 8px;">
+        <label class="form-label" style="margin-bottom: 6px;">匯入模式：</label>
+        <div style="display: flex; gap: 20px;">
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px;">
+            <input type="radio" name="batch-clues-mode" value="append" checked>
+            <span>➕ 追加至現有線索清單</span>
+          </label>
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px; color: #c62828;">
+            <input type="radio" name="batch-clues-mode" value="replace">
+            <span>⚠️ 清空並取代本場景所有舊線索</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close="modal-batch-clues">取消</button>
+        <button type="button" id="confirm-batch-clues-btn" class="btn btn-primary" style="background: #e65100;">
+          🚀 確認匯入線索（自動分散座標）
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 彈窗 4：全站 AI 教材生成器 (Master AI Modal) ================= -->
+  <div id="modal-ai-master" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">🤖 全站 AI 一鍵生成整套教材（Prompt ＋ JSON 立即套用）</h3>
+        <button type="button" class="modal-close-btn" data-close="modal-ai-master">✕</button>
+      </div>
+
+      <div style="font-size: 14px; color: #5d4037; line-height: 1.6; margin-bottom: 14px;">
+        只要複製下方精心設計的 <strong>Master AI Prompt</strong>，貼至 ChatGPT、Claude 或 Gemini，指定任何想製作的主題（例如：太空八大行星、臺灣國家公園生態、古埃及文明、水資源探險），AI 就會為您<strong>一次生成全站所有文字、各場景線索、題庫、比較總表與大魔王</strong>！<br>
+        <span style="color: #c2185b; font-weight: 700;">🌟 特別功能：AI 會將各場景的【360° 防失真生圖提示詞】自動生成為最後一個線索，匯入後您可隨時複製去 AI 生圖工具製圖，再手動上傳換圖！</span>
+      </div>
+
+      <!-- 360 生圖防失真指引卡片 -->
+      <div style="background: #e1f5fe; border: 1.5px solid #81d4fa; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #01579b; line-height: 1.6;">
+        <strong>💡 360° 全景圖防止人物/物件比例失真技巧：</strong><br>
+        1. <strong>為什麼會失真？</strong>：若提示詞未指定視角與距離，AI 常會生成「近距微距特寫」或「魚眼曲面」，在 360 投影下會導致物件被強行彎成圓頂或在腳底形成旋渦。<br>
+        2. <strong>最推薦工具</strong>：直接使用 <a href="https://skybox.blockadelabs.com/" target="_blank" style="color: #0277bd; font-weight: 700; text-decoration: underline;">Blockade Labs Skybox AI</a>，專為 360 VR 打造，一鍵生成無失真 2:1 等距長方圖。<br>
+        3. <strong>使用 Midjourney / Flux / SD</strong>：新版 Prompt 已全面強制加入 <code>centered flat eye-level horizon line</code>（平視置中地平線）、<code>realistic human-eye scale</code>（2~5公尺人眼自然尺度）與 <code>--no fisheye, curved horizon, dome, macro</code> 排除詞，徹底杜絕失真！
+      </div>
+
+      <!-- 步驟 1：複製 Prompt -->
+      <div class="prompt-card" style="background: #ede7f6; border-color: #d1c4e9;">
+        <div class="prompt-header">
+          <strong style="color: #4a148c; font-size: 14px;">第一步：複製全站 AI 生成 Prompt</strong>
+          <button type="button" id="copy-master-ai-prompt-btn" class="copy-prompt-btn" style="background: #6a1b9a;">
+            📋 複製全站 AI 生成 Prompt
+          </button>
+        </div>
+        <div id="master-ai-prompt-text" class="ai-prompt-box"></div>
+      </div>
+
+      <!-- 步驟 2：貼上回傳 JSON 立即套用 -->
+      <div class="form-group">
+        <label class="form-label" style="display: flex; justify-content: space-between;">
+          <strong style="color: #2e7d32; font-size: 14px;">第二步：貼上 AI 回覆的完整 JSON 代碼區塊：</strong>
+          <span id="master-ai-json-status" style="font-weight: 700; color: #555;">等待貼入 JSON...</span>
+        </label>
+        <textarea id="master-ai-json-input" class="form-textarea md-raw-textarea" rows="10" placeholder="請將 AI 生成的 ```json ... ``` 程式碼區塊完整貼在此處..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close="modal-ai-master">取消</button>
+        <button type="button" id="apply-master-ai-btn" class="btn btn-primary" style="background: linear-gradient(135deg, #6a1b9a, #8e24aa); border: none; font-weight: 800; padding: 10px 24px; font-size: 15px;">
+          🚀 立即套用為全新教材專案
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 隱藏的獨立上傳檔案 Input -->
+  <input type="file" id="standalone-file-picker" accept="image/jpeg,image/png,image/webp" style="display: none;">
+  <input type="file" id="import-json-picker" accept=".json" style="display: none;">
+
+  <!-- Toast 訊息提示 -->
+  <div id="toast" class="toast-msg">
+    <span>✅</span>
+    <span id="toast-text">設定已更新！</span>
+  </div>
+
+  <!-- 核心函式庫與模組腳本 -->
+  <script src="js/pannellum.js"></script>
+  <script src="data/pano_data.js"></script>
+  <script src="data/cert_data.js"></script>
+  <script src="data/eras.js"></script>
+  <script src="js/markdown.js"></script>
+
+  <!-- 教師端工作台主程式 -->
+  <script src="js/editor_studio.js"></script>
+
+</body>
+</html>
