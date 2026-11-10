@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>史前臺灣時光機：360° 生存大挑戰｜國小社會領域數位教材</title>
+  <meta name="description" content="對應國小社會五上第三單元〈尋根探源話臺灣〉，透過 360° 全景沉浸式探索舊石器時代、新石器時代與金屬器時代生活，挑戰生存問答領取探險家證書！">
+
+  <!-- Google Fonts: Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <!-- Pannellum 360 Viewer CSS (本地優先，完全支援離線使用) -->
+  <link rel="stylesheet" href="css/pannellum.css">
+
+  <!-- 主樣式表 -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ================= 頂部全域功能列 ================= -->
+  <header class="app-header">
+    <div class="brand-wrap">
+      <span class="brand-icon">🏺</span>
+      <div>
+        <h1 class="brand-title">史前臺灣時光機</h1>
+      </div>
+      <span class="brand-tag">社會五上・第 66～75 頁</span>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="header-tool-btn open-comparison-btn" title="查看三個時代生活比較表">
+        📊 時代生活比較表
+      </button>
+      <button type="button" class="sound-toggle-btn" title="切換音效開關">
+        🔊 音效開
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= 畫面 1：首頁 (Home Screen) ================= -->
+  <main id="home-screen" class="screen">
+    <div class="home-container">
+      <div class="hero-mascot-wrap">
+        <img src="img/mascot.png" alt="考古小隊長" class="hero-mascot-img">
+      </div>
+
+      <span class="home-badge-tag">🌟 國小社會五上 數位 360° 互動教材</span>
+      <h2 class="home-title">史前臺灣時光機<br>360° 生存大挑戰</h2>
+      <p class="home-desc">
+        搭乘時光機穿越五萬年！前往八仙洞、卑南與十三行，轉動 360° 全景畫面尋找史前生活線索，回答生存挑戰，贏得專屬探險家證書！
+      </p>
+
+      <div id="home-progress-tag" class="progress-notify-tag hidden"></div>
+
+      <div class="home-login-card">
+        <label for="player-name-input" class="input-label">請輸入探險家姓名：</label>
+        <div class="input-group">
+          <input type="text" id="player-name-input" class="name-input" placeholder="例如：林小明 或 座號 12 號" maxlength="10" autocomplete="off">
+          <button type="button" id="start-adventure-btn" class="primary-btn pulse-glow">
+            🚀 啟動時光機
+          </button>
+        </div>
+      </div>
+
+      <div class="home-actions">
+        <button type="button" id="reset-progress-btn" class="secondary-btn">
+          🔄 重新探險（清除進度）
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= 畫面 2：時光機選單 (Timeline Screen) ================= -->
+  <main id="timeline-screen" class="screen hidden">
+    <div class="timeline-container">
+      <div class="timeline-header">
+        <h2>⏱️ 時光機儀表板</h2>
+        <p>歡迎探險家 <strong id="timeline-player-name" style="color: var(--color-primary);"></strong>！請依序前往三個史前時代探索：</p>
+      </div>
+
+      <!-- 時間軸視覺軸線 -->
+      <div class="timeline-bar">
+        <div class="timeline-node" style="left: 5%;">
+          <div class="node-dot"></div>
+          <span class="node-label">50,000 年前</span>
+        </div>
+        <div class="timeline-node" style="left: 40%;">
+          <div class="node-dot"></div>
+          <span class="node-label">7,000 年前</span>
+        </div>
+        <div class="timeline-node" style="left: 75%;">
+          <div class="node-dot"></div>
+          <span class="node-label">2,000 年前</span>
+        </div>
+        <div class="timeline-node" style="left: 98%;">
+          <div class="node-dot" style="border-color: #1976d2;"></div>
+          <span class="node-label">現代（我們）</span>
+        </div>
+      </div>
+
+      <!-- 三個時代關卡卡片 -->
+      <div id="era-cards-container" class="era-cards-grid"></div>
+
+      <!-- 三關全通關時出現的大魔王與證書彩帶 -->
+      <div id="timeline-cert-banner" class="cert-banner hidden">
+        <div class="cert-banner-text">
+          <h3>🎉 恭喜完成三大時代生存挑戰！</h3>
+          <p>你已經具備完整的臺灣史前生活知識，準備好領取探險家證書了嗎？</p>
+        </div>
+        <button type="button" id="view-final-cert-btn" class="primary-btn pulse-glow">
+          🏆 前往領取探險家證書
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= 畫面 3：360° 探索畫面 (Viewer Screen) ================= -->
+  <main id="viewer-screen" class="screen hidden viewer-maximized">
+    <!-- Pannellum 檢視器全景畫布 (100% 滿版無黑邊) -->
+    <div id="panorama"></div>
+
+    <!-- 頂部浮動儀表列 (Floating Top HUD) -->
+    <div class="hud-top-bar">
+      <!-- 左上角：返回按鈕 + 時代遺址資訊膠囊 -->
+      <div class="hud-top-left">
+        <button type="button" id="back-to-timeline-btn" class="hud-btn hud-back-btn" title="返回時光機儀表板">
+          <span class="hud-btn-icon">⬅</span>
+          <span class="hud-btn-text">回時光機選單</span>
+        </button>
+        <div class="hud-era-pill">
+          <span id="scene-era-title" class="hud-era-title">舊石器時代</span>
+          <span class="hud-pill-divider">·</span>
+          <span id="scene-era-info" class="hud-era-info">八仙洞遺址（約 50,000 年前）</span>
+        </div>
+      </div>
+
+      <!-- 右上角：浮動線索雷達選單 + 探索進度 + 音效開關 -->
+      <div class="hud-top-right">
+        <!-- 線索雷達下拉選單 -->
+        <div class="clue-radar-dropdown" id="clue-radar-dropdown">
+          <button type="button" id="clue-radar-toggle-btn" class="hud-btn hud-radar-btn" aria-expanded="false" title="開啟本關生活線索清單">
+            <span class="radar-btn-icon">🧭</span>
+            <span class="radar-btn-text">線索雷達</span>
+            <span id="radar-progress-badge" class="radar-progress-badge">0 / 6</span>
+            <span class="radar-arrow">▾</span>
+          </button>
+
+          <!-- 浮動線索清單卡片 -->
+          <div id="clue-radar-menu" class="clue-radar-menu hidden">
+            <div class="radar-menu-header">
+              <div class="radar-menu-title">🧭 生活線索快速雷達</div>
+              <div class="radar-menu-subtitle">點擊線索可自動轉向並開啟內容</div>
+            </div>
+            <div id="clue-radar-items" class="clue-radar-items-list">
+              <!-- 由 JS 動態注入線索按鈕 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 探索計數相容標籤 -->
+        <div id="clue-counter" class="hud-clue-counter hidden">
+          <span>🔍 線索</span> <strong>0 / 6</strong>
+        </div>
+
+        <!-- 音效切換 -->
+        <button type="button" class="hud-btn sound-toggle-btn" title="切換音效開關">
+          🔊 音效開
+        </button>
+      </div>
+    </div>
+
+    <!-- 畫面底端引導與生存挑戰列 (Floating Bottom HUD) -->
+    <div class="scene-bottom-bar">
+      <!-- 考古小隊長語音提示盒 -->
+      <div class="captain-helper-box">
+        <img src="img/mascot.png" alt="考古小隊長" class="captain-avatar-img">
+        <div class="speech-bubble">
+          <span class="captain-speaker-name">考古小隊長：</span>
+          <span id="captain-speech-text">轉動畫面看看四周，發光的金色圓點就是線索喔！</span>
+        </div>
+      </div>
+
+      <!-- 右下角功能按鈕組 -->
+      <div class="scene-actions-right">
+        <button type="button" id="guide-clue-btn" class="compass-guide-btn" title="把鏡頭轉向尚未發現的線索">
+          🧭 找不到線索？指引我！
+        </button>
+        <button type="button" id="start-challenge-btn" class="challenge-start-btn disabled" disabled title="找齊所有線索後即可開啟生存挑戰">
+          ⚔️ 開始生存挑戰
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= 畫面 4：問答挑戰畫面 (Quiz Screen) ================= -->
+  <main id="quiz-screen" class="screen hidden">
+    <div class="quiz-container">
+      <div class="quiz-header">
+        <h2 id="quiz-era-name">舊石器時代・生存問答挑戰</h2>
+        <span id="quiz-progress" class="quiz-progress-pill">第 1 / 4 題</span>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-question-row">
+          <div id="quiz-question-text" class="quiz-question-text">題目載入中...</div>
+          <button type="button" id="quiz-speak-btn" class="speak-btn" title="朗讀題目與選項">
+            🔊 唸給我聽
+          </button>
+        </div>
+
+        <!-- 選項按鈕列表 -->
+        <div id="quiz-options-container" class="quiz-options-list"></div>
+
+        <!-- 答題反饋與提示區 -->
+        <div id="quiz-feedback" class="quiz-feedback-box hidden">
+          <div id="quiz-feedback-text"></div>
+        </div>
+      </div>
+
+      <div class="quiz-footer-actions">
+        <button type="button" id="quiz-back-to-scene-btn" class="secondary-btn">
+          🔍 回 360° 場景看一下線索
+        </button>
+        <button type="button" id="quiz-next-btn" class="primary-btn hidden">
+          下一題 ➔
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= 畫面 5：證書頁 (Certificate Screen) ================= -->
+  <main id="certificate-screen" class="screen hidden">
+    <div class="cert-page-container">
+      <div class="cert-page-header">
+        <h2>🎉 恭喜榮獲探險家證書！</h2>
+        <p>你已經完成三個史前時代的探索，表現卓越，快下載或列印你的榮譽證書吧！</p>
+      </div>
+
+      <!-- 證書 Canvas 預覽 -->
+      <div class="cert-canvas-wrap">
+        <canvas id="certificate-canvas"></canvas>
+      </div>
+
+      <!-- 證書操作功能列 -->
+      <div class="cert-actions-bar">
+        <button type="button" id="download-cert-btn" class="primary-btn pulse-glow">
+          📥 下載證書圖片 (PNG)
+        </button>
+        <button type="button" id="print-cert-btn" class="secondary-btn">
+          🖨️ 列印證書 (A4)
+        </button>
+        <button type="button" class="secondary-btn open-comparison-btn">
+          📊 時代生活比較表
+        </button>
+        <button type="button" id="cert-back-home-btn" class="secondary-btn">
+          🏠 回時光機選單
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= 彈窗 1：線索小卡 (Clue Modal) ================= -->
+  <div id="clue-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="clue-modal-card">
+      <div id="clue-icon" class="clue-icon-huge">🏠</div>
+      <h3 id="clue-title" class="clue-modal-title">海邊的天然岩洞</h3>
+      <div id="clue-text" class="clue-modal-text">
+        這裡的人住在海邊的岩洞裡。岩洞可以遮風避雨，旁邊又有河流，喝水、取水都很方便！
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="clue-speak-btn" class="speak-btn">
+          🔊 唸給我聽
+        </button>
+        <button type="button" id="clue-close-btn" class="primary-btn">
+          我知道了！
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 彈窗 2：過關勝利徽章彈窗 (Victory Modal) ================= -->
+  <div id="victory-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="victory-card">
+      <img id="victory-badge-img" src="img/badges/paleolithic.png" alt="過關徽章" class="victory-badge-large">
+      <h3 class="victory-title">闖關成功！</h3>
+      <div id="victory-badge-title" class="victory-badge-name">🔥 榮獲「生火打石小達人」徽章！</div>
+      <div class="victory-speech-box">
+        <p id="victory-speech-text">恭喜你學會了舊石器時代的生存技能！</p>
+      </div>
+      <button type="button" id="victory-next-btn" class="primary-btn pulse-glow">
+        前往下一個時代 ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= 彈窗 3：三個時代比較表 (Comparison Modal) ================= -->
+  <div id="comparison-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="comparison-card">
+      <h2>📊 臺灣三大史前時代生活比較總表</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>比較項目</th>
+            <th>舊石器時代（八仙洞）</th>
+            <th>新石器時代（卑南）</th>
+            <th>金屬器時代（十三行）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>代表年代</strong></td>
+            <td>約 50,000 ～ 5,000 年前</td>
+            <td>約 7,000 ～ 2,000 年前</td>
+            <td>約 2,000 ～ 400 年前</td>
+          </tr>
+          <tr>
+            <td><strong>居住方式</strong></td>
+            <td>住在海邊天然岩洞（遮風避雨、靠近水源）</td>
+            <td>以竹子、茅草蓋屋，以板岩為牆與石柱，形成<strong>聚落定居</strong></td>
+            <td>通風涼爽、防潮防獸的<strong>架高干欄式木屋</strong></td>
+          </tr>
+          <tr>
+            <td><strong>食物取得</strong></td>
+            <td>採集野果、狩獵野生動物、河海捕魚（向大自然索取）</td>
+            <td><strong>開始農耕</strong>（種植小米與稻米）、<strong>畜養家畜</strong>（狗、雞）</td>
+            <td>農耕、捕魚，並與外地商人貿易獲得更多資源</td>
+          </tr>
+          <tr>
+            <td><strong>主要工具</strong></td>
+            <td><strong>打製石器</strong>（用石頭敲打出尖銳邊緣）</td>
+            <td><strong>磨製石器</strong>（研磨石刀、石斧）、<strong>陶器</strong>、紡織器具</td>
+            <td><strong>鐵器</strong>（高溫煉鐵、鍛造鐵刀鐵鋤）、石器種類大幅減少</td>
+          </tr>
+          <tr>
+            <td><strong>工藝與技能</strong></td>
+            <td>已知<strong>用火</strong>（燒烤熟食、取暖照明、驅獸）</td>
+            <td><strong>製作陶器</strong>（烹煮與儲存）、<strong>雕刻精美玉器</strong>、織布做衣服</td>
+            <td><strong>高溫煉鐵</strong>、燒製<strong>人面陶罐</strong>與動物陶偶</td>
+          </tr>
+          <tr>
+            <td><strong>對外交流</strong></td>
+            <td>小範圍活動</td>
+            <td>使用花蓮豐田玉，並與<strong>東南亞有海外交流</strong></td>
+            <td>以獸皮與陶器，與海外交換<strong>玻璃飾品、瑪瑙珠與銅幣</strong></td>
+          </tr>
+          <tr>
+            <td><strong>文化核心特質</strong></td>
+            <td colspan="3" style="text-align: center; color: var(--color-primary); font-weight: bold; background: #fff8e1;">
+              💡 <strong>技術與技能具有深厚的「延續性」</strong>：後來的文明在前人的智慧基礎上不斷發明與進步！
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="text-align: center;">
+        <button type="button" id="close-comparison-btn" class="primary-btn">
+          關閉比較表
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pannellum 360 Viewer JS (本地優先，完全支援離線使用與 file:/// 免 CORS) -->
+  <script src="js/pannellum.js"></script>
+
+  <!-- 核心資料與模組腳本 -->
+  <script src="data/eras.js"></script>
+  <script src="data/pano_data.js"></script>
+  <script src="data/cert_data.js"></script>
+  <script src="js/markdown.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/viewer.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/certificate.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
