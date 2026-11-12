@@ -1,7 +1,7 @@
 // ==========================================
 // Google 試算表雲端教材與成績同步模組
 // ==========================================
-const GAS_API_URL = "請在這裡貼上你的_GAS_網頁應用程式_EXEC_網址";
+const GAS_API_URL = "script.google.com/macros/s/AKfycbyfm3WRGTbeNBfPg5nnMBWfPi19rDKjEj4CAOtg0LP1_U-GeSJl-l0LfklelviL5zUT/exec";
 
 async function syncCloudCourseData() {
   const urlParams = new URLSearchParams(window.location.search);
