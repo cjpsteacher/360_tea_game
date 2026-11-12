@@ -1,5 +1,5 @@
 // ==========================================
-// Google 試算表雲端教材與成績同步模組
+// Google 試算表雲端教材與成績同步模組 (完整連動版)
 // ==========================================
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyfm3WRGTbeNBfPg5nnMBWfPi19rDKjEj4CAOtg0LP1_U-GeSJl-l0LfklelviL5zUT/exec";
 
@@ -7,7 +7,7 @@ async function syncCloudCourseData() {
   const urlParams = new URLSearchParams(window.location.search);
   const courseId = urlParams.get('id');
 
-  if (!courseId || GAS_API_URL.includes("請在這裡貼上")) {
+  if (!courseId || !GAS_API_URL.startsWith("http")) {
     return;
   }
 
@@ -25,42 +25,19 @@ async function syncCloudCourseData() {
       const cloudData = result.currentCourse.data;
       window.CURRENT_COURSE_ID = courseId;
 
-      if (cloudData.appTitle) {
-        document.title = `${cloudData.appTitle}：${cloudData.appSubtitle || '360° 探索大挑戰'}`;
-        const brandTitle = document.querySelector('.brand-title');
-        if (brandTitle) brandTitle.textContent = cloudData.appTitle;
-        const homeTitle = document.querySelector('.home-title');
-        if (homeTitle) homeTitle.innerHTML = `${cloudData.appTitle}<br>${cloudData.appSubtitle || ''}`;
-      }
-      if (cloudData.brandTag) {
-        const brandTag = document.querySelector('.brand-tag');
-        if (brandTag) brandTag.textContent = cloudData.brandTag;
-      }
-      if (cloudData.homeBadge) {
-        const homeBadge = document.querySelector('.home-badge-tag');
-        if (homeBadge) homeBadge.textContent = cloudData.homeBadge;
-      }
-      if (cloudData.homeDesc) {
-        const homeDesc = document.querySelector('.home-desc');
-        if (homeDesc) homeDesc.textContent = cloudData.homeDesc;
-      }
-      if (cloudData.startButtonText) {
-        const startBtn = document.getElementById('start-adventure-btn');
-        if (startBtn) startBtn.textContent = cloudData.startButtonText;
-      }
-      if (cloudData.timelineTitle) {
-        const timelineH2 = document.querySelector('.timeline-header h2');
-        if (timelineH2) timelineH2.textContent = cloudData.timelineTitle;
-      }
-
-      if (Array.isArray(cloudData.eras)) {
-        if (typeof ERAS_DATA !== 'undefined') {
-          ERAS_DATA.length = 0;
-          ERAS_DATA.push(...cloudData.eras);
+      // 1. 切換不同課程時，自動清除舊課程的闖關進度避免關卡鎖死
+      const lastCourseId = localStorage.getItem('active_cloud_course_id');
+      if (lastCourseId !== courseId) {
+        if (window.GameStorage && typeof window.GameStorage.resetAll === 'function') {
+          window.GameStorage.resetAll();
         }
-        window.ERAS_DATA = cloudData.eras;
+        localStorage.setItem('active_cloud_course_id', courseId);
       }
 
+      // 2. 完整覆寫全域教材資料結構 (包含 appTitle, eras, comparisonTable, finalBoss 等)
+      window.ERAS_DATA = Object.assign({}, window.ERAS_DATA || {}, cloudData);
+
+      // 3. 同步更新證書設定 (若存在 CERT_DATA)
       if (typeof CERT_DATA !== 'undefined') {
         if (cloudData.issuer) CERT_DATA.issuer = cloudData.issuer;
         if (cloudData.certTitle) CERT_DATA.certTitle = cloudData.certTitle;
@@ -68,19 +45,20 @@ async function syncCloudCourseData() {
         if (cloudData.certTextLines) CERT_DATA.certTextLines = cloudData.certTextLines;
       }
 
-      if (cloudData.comparisonTable && cloudData.comparisonTable.markdown) {
-        const compCard = document.querySelector('#comparison-modal .comparison-card');
-        if (compCard && typeof parseMarkdown === 'function') {
-          compCard.innerHTML = `
-            ${parseMarkdown(cloudData.comparisonTable.markdown)}
-            <div style="text-align: center; margin-top: 20px;">
-              <button type="button" id="close-comparison-btn" class="primary-btn" onclick="document.getElementById('comparison-modal').classList.add('hidden')">關閉比較表</button>
-            </div>
-          `;
-        }
+      // 4. 關鍵：通知 App 重新以雲端新資料初始化並渲染首頁、時間軸與關卡卡片！
+      if (window.App && typeof window.App.init === 'function') {
+        await window.App.init();
       }
 
-      console.log(`✅ 雲端課程 [${courseId}] 載入成功！`);
+      // 5. 若使用者已經停留在時間軸畫面，強制重繪時間軸卡片
+      if (window.App && typeof window.App.refreshTimeline === 'function') {
+        window.App.refreshTimeline();
+      }
+
+      // 6. 掛載成績自動回傳（當證書渲染完成時自動寫入試算表 Records）
+      hookCertificateScoreUpload();
+
+      console.log(`✅ 雲端課程 [${courseId}] 載入與畫面重繪成功！`);
     } else {
       alert("⚠️ 找不到指定的雲端課程代碼：" + courseId);
     }
@@ -93,8 +71,23 @@ async function syncCloudCourseData() {
   }
 }
 
+// 攔截證書產生器，過關領證時自動回傳成績到 Google 試算表
+function hookCertificateScoreUpload() {
+  if (window.CertificateManager && typeof window.CertificateManager.render === 'function' && !window.CertificateManager._cloudHooked) {
+    const origRender = window.CertificateManager.render.bind(window.CertificateManager);
+    window.CertificateManager.render = function (...args) {
+      const res = origRender(...args);
+      const state = window.GameStorage ? window.GameStorage.get() : {};
+      const studentName = state.playerName || '未填寫姓名';
+      uploadStudentScoreToSheet(studentName, "全關卡探索與測驗通過");
+      return res;
+    };
+    window.CertificateManager._cloudHooked = true;
+  }
+}
+
 async function uploadStudentScoreToSheet(studentName, scoreInfo = "全關卡探索與測驗通過") {
-  if (!GAS_API_URL || GAS_API_URL.includes("請在這裡貼上")) return;
+  if (!GAS_API_URL || !GAS_API_URL.startsWith("http")) return;
   try {
     await fetch(GAS_API_URL, {
       method: 'POST',
@@ -104,10 +97,11 @@ async function uploadStudentScoreToSheet(studentName, scoreInfo = "全關卡探�
         course_id: window.CURRENT_COURSE_ID || 'default_prehistoric',
         class_name: '',
         seat_no: '',
-        student_name: studentName || '未填寫姓名',
+        student_name: studentName,
         score_info: scoreInfo
       })
     });
+    console.log(`📊 學生 [${studentName}] 成績已同步至 Google 試算表！`);
   } catch (e) {
     console.error("成績同步失敗：", e);
   }
