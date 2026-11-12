@@ -7,13 +7,11 @@ async function syncCloudCourseData() {
   const urlParams = new URLSearchParams(window.location.search);
   const courseId = urlParams.get('id');
 
-  // 若網址沒有帶 ?id=xxx，且你希望預設維持原本寫死的「史前臺灣」，就直接略過雲端載入
   if (!courseId || GAS_API_URL.includes("請在這裡貼上")) {
     return;
   }
 
   try {
-    // 顯示載入中提示
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'cloud-loading-overlay';
     loadingDiv.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.92);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;font-size:1.25rem;';
@@ -27,7 +25,6 @@ async function syncCloudCourseData() {
       const cloudData = result.currentCourse.data;
       window.CURRENT_COURSE_ID = courseId;
 
-      // 1. 自動替換首頁與網頁標題文字
       if (cloudData.appTitle) {
         document.title = `${cloudData.appTitle}：${cloudData.appSubtitle || '360° 探索大挑戰'}`;
         const brandTitle = document.querySelector('.brand-title');
@@ -56,7 +53,6 @@ async function syncCloudCourseData() {
         if (timelineH2) timelineH2.textContent = cloudData.timelineTitle;
       }
 
-      // 2. 覆寫全域關卡資料 (供 data/eras.js 原本的變數名稱使用)
       if (Array.isArray(cloudData.eras)) {
         if (typeof ERAS_DATA !== 'undefined') {
           ERAS_DATA.length = 0;
@@ -65,7 +61,6 @@ async function syncCloudCourseData() {
         window.ERAS_DATA = cloudData.eras;
       }
 
-      // 3. 覆寫證書資料 (供 data/cert_data.js 原本的變數名稱使用)
       if (typeof CERT_DATA !== 'undefined') {
         if (cloudData.issuer) CERT_DATA.issuer = cloudData.issuer;
         if (cloudData.certTitle) CERT_DATA.certTitle = cloudData.certTitle;
@@ -73,7 +68,6 @@ async function syncCloudCourseData() {
         if (cloudData.certTextLines) CERT_DATA.certTextLines = cloudData.certTextLines;
       }
 
-      // 4. 覆寫比較表內容
       if (cloudData.comparisonTable && cloudData.comparisonTable.markdown) {
         const compCard = document.querySelector('#comparison-modal .comparison-card');
         if (compCard && typeof parseMarkdown === 'function') {
@@ -99,9 +93,8 @@ async function syncCloudCourseData() {
   }
 }
 
-// 供領取證書時呼叫：自動將學生姓名與過關狀態寫回 Google 試算表
 async function uploadStudentScoreToSheet(studentName, scoreInfo = "全關卡探索與測驗通過") {
-  if (!GAS_API_URL || GAS_API_URL.includes("https://script.google.com/macros/s/AKfycbyfm3WRGTbeNBfPg5nnMBWfPi19rDKjEj4CAOtg0LP1_U-GeSJl-l0LfklelviL5zUT/exec")) return;
+  if (!GAS_API_URL || GAS_API_URL.includes("請在這裡貼上")) return;
   try {
     await fetch(GAS_API_URL, {
       method: 'POST',
@@ -115,7 +108,6 @@ async function uploadStudentScoreToSheet(studentName, scoreInfo = "全關卡探�
         score_info: scoreInfo
       })
     });
-    console.log("✅ 學生過關成績已自動同步至 Google 試算表！");
   } catch (e) {
     console.error("成績同步失敗：", e);
   }
