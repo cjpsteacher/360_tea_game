@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    史前臺灣 360° 時光探險 - 主樣式表 (CSS)
    設計風格：大地陶土色系、溫暖插畫風、高易讀性、無障礙觸控優化
@@ -1707,5 +1708,35 @@ button {
     font-size: 14px;
     padding: 10px 12px;
     text-align: center;
+  }
+}
+
+/* 手機與平板響應式（RWD）自動適配樣式 */
+@media (max-width: 768px) {
+  /* 1. 頂部導覽列自動換行，避免標題與按鈕互相遮擋 */
+  .top-nav, .viewer-header {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+  }
+
+  /* 2. 關卡卡片改為單欄滿版顯示，手指滑動更好閱讀 */
+  #era-cards-container {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 0 12px !important;
+  }
+
+  /* 3. 360° 線索彈窗與測驗選項加大點擊區，避免手機螢幕溢位 */
+  .clue-modal-card, .quiz-card, .comparison-card {
+    width: 92vw !important;
+    max-height: 82vh !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+  }
+
+  /* 4. 防止 iOS 手機點擊輸入框時畫面自動放大跑版 */
+  input, select, textarea {
+    font-size: 16px !important;
   }
 }
