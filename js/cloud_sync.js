@@ -1,5 +1,5 @@
 // ==========================================
-// Google 試算表雲端教材與成績同步模組 (完整連動版)
+// Google 試算表雲端教材與成績同步模組 (完整連動＋介面文字自動適配版)
 // ==========================================
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyfm3WRGTbeNBfPg5nnMBWfPi19rDKjEj4CAOtg0LP1_U-GeSJl-l0LfklelviL5zUT/exec";
 
@@ -34,10 +34,10 @@ async function syncCloudCourseData() {
         localStorage.setItem('active_cloud_course_id', courseId);
       }
 
-      // 2. 完整覆寫全域教材資料結構 (包含 appTitle, eras, comparisonTable, finalBoss 等)
+      // 2. 完整覆寫全域教材資料結構
       window.ERAS_DATA = Object.assign({}, window.ERAS_DATA || {}, cloudData);
 
-      // 3. 同步更新證書設定 (若存在 CERT_DATA)
+      // 3. 同步更新證書設定
       if (typeof CERT_DATA !== 'undefined') {
         if (cloudData.issuer) CERT_DATA.issuer = cloudData.issuer;
         if (cloudData.certTitle) CERT_DATA.certTitle = cloudData.certTitle;
@@ -45,20 +45,21 @@ async function syncCloudCourseData() {
         if (cloudData.certTextLines) CERT_DATA.certTextLines = cloudData.certTextLines;
       }
 
-      // 4. 關鍵：通知 App 重新以雲端新資料初始化並渲染首頁、時間軸與關卡卡片！
+      // 4. 通知 App 重新以雲端新資料初始化並渲染畫面
       if (window.App && typeof window.App.init === 'function') {
         await window.App.init();
       }
-
-      // 5. 若使用者已經停留在時間軸畫面，強制重繪時間軸卡片
       if (window.App && typeof window.App.refreshTimeline === 'function') {
         window.App.refreshTimeline();
       }
 
-      // 6. 掛載成績自動回傳（當證書渲染完成時自動寫入試算表 Records）
+      // 5. 自動適配介面上的「時代生活比較表」、「三個史前時代」、「現代」、「遺址」等字眼
+      adaptGenericCourseLabels(cloudData);
+
+      // 6. 掛載成績自動回傳
       hookCertificateScoreUpload();
 
-      console.log(`✅ 雲端課程 [${courseId}] 載入與畫面重繪成功！`);
+      console.log(`✅ 雲端課程 [${courseId}] 載入與介面適配成功！`);
     } else {
       alert("⚠️ 找不到指定的雲端課程代碼：" + courseId);
     }
@@ -68,6 +69,53 @@ async function syncCloudCourseData() {
     console.error("雲端課程載入失敗：", err);
     const overlay = document.getElementById('cloud-loading-overlay');
     if (overlay) overlay.remove();
+  }
+}
+
+// 動態替換原本寫死在史前歷史模板的通用文字
+function adaptGenericCourseLabels(cloudData) {
+  const eraCount = (cloudData.eras && cloudData.eras.length) || 3;
+  const tableBtnText = cloudData.comparisonBtnText || '📊 課程重點比較表';
+  const timelineSubText = cloudData.timelineSubtitle || `請依序前往 ${eraCount} 個探險站點完成觀測與挑戰：`;
+  const endNodeText = cloudData.timelineEndLabel || '終點達陣';
+  const sitePrefixText = cloudData.sitePrefix || '📍 地點：';
+
+  const applyLabels = () => {
+    // (1) 右上角比較表按鈕文字
+    document.querySelectorAll('.open-comparison-btn').forEach(btn => {
+      btn.textContent = tableBtnText;
+    });
+
+    // (2) 儀表板副標題（「請依序前往三個史前時代探索：」）
+    const headerP = document.querySelector('.timeline-header p');
+    if (headerP && headerP.innerHTML.includes('史前時代')) {
+      const nameSpan = document.getElementById('timeline-player-name');
+      const playerName = nameSpan ? nameSpan.textContent : '探險家';
+      headerP.innerHTML = `歡迎探險家 <span id="timeline-player-name">${playerName}</span>！${timelineSubText}`;
+    }
+
+    // (3) 時間軸最右側終點標籤（「現代」）
+    document.querySelectorAll('.timeline-node .node-label').forEach(lbl => {
+      if (lbl.textContent.trim() === '現代') {
+        lbl.textContent = endNodeText;
+      }
+    });
+
+    // (4) 卡片上的「📍 遺址：」前綴
+    document.querySelectorAll('.era-site').forEach(el => {
+      if (el.textContent.includes('遺址：')) {
+        el.textContent = el.textContent.replace('📍 遺址：', sitePrefixText);
+      }
+    });
+  };
+
+  // 立即執行一次，並監聽後續卡片重繪時自動保持替換
+  applyLabels();
+  const cardsContainer = document.getElementById('era-cards-container');
+  if (cardsContainer && !cardsContainer._labelObserver) {
+    const observer = new MutationObserver(() => applyLabels());
+    observer.observe(cardsContainer, { childList: true });
+    cardsContainer._labelObserver = observer;
   }
 }
 
