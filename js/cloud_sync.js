@@ -154,3 +154,61 @@ async function uploadStudentScoreToSheet(studentName, scoreInfo = "全關卡探�
     console.error("成績同步失敗：", e);
   }
 }
+// ==========================================
+// 測驗題目與選項雙重隨機洗牌模組（防止學生背答案）
+// ==========================================
+function shuffleQuizData(courseObj) {
+  if (!courseObj || typeof courseObj !== 'object') return;
+
+  const shuffleArray = (arr) => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
+  // 洗牌單一題目的選項，並自動追蹤正確答案的新索引位置
+  const shuffleSingleQuestion = (qItem) => {
+    if (!qItem || !Array.isArray(qItem.options) || typeof qItem.answer !== 'number') return;
+    const mapped = qItem.options.map((text, idx) => ({
+      text,
+      isCorrect: idx === qItem.answer
+    }));
+    shuffleArray(mapped);
+    qItem.options = mapped.map(m => m.text);
+    qItem.answer = mapped.findIndex(m => m.isCorrect);
+  };
+
+  // 1. 洗牌各關卡（eras）的題目順序與每題選項順序
+  if (Array.isArray(courseObj.eras)) {
+    courseObj.eras.forEach(era => {
+      if (Array.isArray(era.quiz)) {
+        shuffleArray(era.quiz);
+        era.quiz.forEach(shuffleSingleQuestion);
+      }
+    });
+  }
+
+  // 2. 洗牌終極大魔王（finalBoss）的選項順序
+  if (courseObj.finalBoss) {
+    shuffleSingleQuestion(courseObj.finalBoss);
+  }
+}
+
+// 攔截測驗啟動器（QuizManager），確保每次開啟測驗都會重新洗牌
+(function hookRandomQuizShuffle() {
+  const tryHook = () => {
+    if (window.QuizManager && typeof window.QuizManager.open === 'function' && !window.QuizManager._shuffleHooked) {
+      const origOpen = window.QuizManager.open.bind(window.QuizManager);
+      window.QuizManager.open = function (...args) {
+        if (window.ERAS_DATA) shuffleQuizData(window.ERAS_DATA);
+        return origOpen(...args);
+      };
+      window.QuizManager._shuffleHooked = true;
+    }
+  };
+  tryHook();
+  window.addEventListener('DOMContentLoaded', tryHook);
+  setTimeout(tryHook, 1500);
+})();
